@@ -26,6 +26,7 @@ from cola.core.utils import get_ip
 from cola.core.mq.hash_ring import HashRing
 from cola.core.mq.node import Node
 from cola.core.rpc import client_call
+from message import Message
 
 class MessageQueue(object):
     def __init__(self, nodes, local_node=None, rpc_server=None, 
@@ -86,8 +87,8 @@ class MessageQueue(object):
         
     def put(self, obj_or_objs, force=False):
         def _check(obj):
-            if not isinstance(obj, basestring):
-                raise ValueError("MessageQueue can only put basestring objects.")
+            if not isinstance(obj, Message):
+                raise ValueError("MessageQueue can only put Message objects.")
         if isinstance(obj_or_objs, (tuple, list)):
             for obj in obj_or_objs:
                 _check(obj)
@@ -98,16 +99,16 @@ class MessageQueue(object):
         
         puts = {}
         bkup_puts = {}
-        for obj in objs:
-            if isinstance(obj, unicode):
-                obj = obj.encode('utf-8')
+        for message in objs:
+            obj = message.get_key()
             
             it = self.hash_ring.iterate_nodes(obj)
             
             # put obj into an mq node.
             put_node = next(it)
             obs = puts.get(put_node, [])
-            obs.append(obj)
+            #obs.append(obj)
+            obs.append(message)
             puts[put_node] = obs
             
             for _ in xrange(self.copies):
@@ -116,7 +117,7 @@ class MessageQueue(object):
                 
                 kv = bkup_puts.get(bkup_node, {})
                 obs = kv.get(put_node, [])
-                obs.append(obj)
+                obs.append(message)
                 kv[put_node] = obs
                 bkup_puts[bkup_node] = kv
         

@@ -105,14 +105,16 @@ class UserInfo(EmbeddedDocument):
     blog = URLField()
     site = URLField()
     intro = StringField()
-    
+    created_at = StringField()
+
     email = EmailField()
     qq = StringField()
     msn = StringField()
     
     n_follows = IntField()
     n_fans = IntField()
-    
+    n_weibos = IntField()
+
     edu = ListField(EmbeddedDocumentField(EduInfo))
     work = ListField(EmbeddedDocumentField(WorkInfo))
     tags = ListField(StringField())
@@ -120,7 +122,11 @@ class UserInfo(EmbeddedDocument):
 class Friend(EmbeddedDocument):
     uid = StringField()
     nickname = StringField()
-    sex = BooleanField
+    sex = BooleanField()
+
+    n_follows = IntField()
+    n_fans = IntField()
+    n_weibos = IntField()
     
 class WeiboUser(Document):
     uid = StringField(required=True)

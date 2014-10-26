@@ -31,6 +31,7 @@ if not os.path.exists(user_conf):
 user_config = Config(user_conf)
 
 starts = [str(start.uid) for start in user_config.job.starts]
+max_level = user_config.job.max_level
 
 mongo_host = user_config.job.mongo.host
 mongo_port = user_config.job.mongo.port

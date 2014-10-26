@@ -23,11 +23,22 @@ Created on 2013-6-8
 import time
 
 from cola.core.unit import Bundle
+from cola.core.mq.message import Message
 
 class WeiboUserBundle(Bundle):
-    def __init__(self, uid):
+    def __init__(self, message, level=0):
+        if isinstance(message, Message):
+            uid = message.get('key')
+            level = message.get('level')
+            if level is None:
+                level = 0
+        else:
+            uid = message
+            level = level
+
         super(WeiboUserBundle, self).__init__(uid)
         self.uid = uid
+        self.level = level
         self.exists = True
         
         self.last_error_page = None
@@ -47,3 +58,6 @@ class WeiboUserBundle(Bundle):
             # remove because some user's link has been http://weibo.com/uid/follow?relate=fans
             # 'http://weibo.com/%s/fans' % self.uid
         ]
+
+    def get_message(self):
+        return Message.from_str("{'''}")

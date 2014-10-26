@@ -1,20 +1,20 @@
 job:
   db: sina
   mode: bundle # also can be `bundle`
-  size: 100   # the destination (including bundle or url) size
+  size: 100   # the destination (including bundle) size
+  max_level: 3  # the max level
   limit: 0  # 0 means no restrictions, if greater than 0, means webpages opened per minute.
   master_port: 12104
   port: 12105
-  instances: 2
+  instances: 1
   mongo:
-    host: localhost
+    host: 10.77.30.62
     port: 27017
   login:
-    - username: # username
-      password: # password
+    - username: 895045426@qq.com  # username
+      password: 1207weibo7217  # password
   starts:
-    - uid: 3211200050
-    - uid: 1898353550
+    - uid: 2340785764
   fetch:
     forward: no
     comment: no

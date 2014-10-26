@@ -24,6 +24,7 @@ import os
 import threading
 import mmap
 import platform
+from message import Message
 
 class NodeExistsError(Exception): pass
 
@@ -34,6 +35,18 @@ class NodeNoSpaceForPut(Exception): pass
 NODE_FILE_SIZE = 4 * 1024 * 1024 # single node store file must be less than 4M.
 
 class Node(object):
+    """
+    一个Worker对应一个Node，其self.dir_用于保存锁文件、记录处理状态的文件。
+    以微博爬取为例，记录当前正在处理的微博用户的uid，新的uid通过put函数写入文件，处理完的uid通过get函数从文件中去掉
+
+    为了方便文件的读取，利用内存映射文件操作文件，并且每个内存映射文件的大小都是4M，当空间不够时会申请新的内存映射文件，
+    通过file_handler保存文件的句柄，map_handlers保存对应内存映射文件的句柄
+
+    在向文件中put微博用户的uid时，会通过verify_exists_hook(bloomfilter)来检测是否是重复的uid，
+    如果不是重复，会向bloomfilter添加该uid（见其verify函数）
+
+    另外，当当前Node执行了stop.py时，会将内存映射文件合并，并写入*.old文件，下次启动是会读入
+    """
     def __init__(self, dir_, size=NODE_FILE_SIZE, verify_exists_hook=None):
         self.lock = threading.Lock()
         self.NODE_FILE_SIZE = size
@@ -81,6 +94,12 @@ class Node(object):
                 os.remove(self.lock_file)
         
     def check(self):
+        """
+        Node对应的目录用于存储锁文件、待处理的bundle的label，即本地消息队列中的信息，比如在微博爬取中待爬取的用户uid
+        如果上一次正常退出，目录会存在多个*.old文件，否则表明上一次非正常退出，需要执行python weibo/stop.py
+        将文件的完整路径存储于self.old_files，将去掉.old的文件名存储于map_files中
+        :return:
+        """
         files = os.listdir(self.dir_)
         for fi in files:
             if fi == 'lock': continue
@@ -96,6 +115,11 @@ class Node(object):
         self.map_files = [f.rsplit('.', 1)[0] for f in self.old_files]
         
     def map(self):
+        """
+        将上次未处理完的bundle的label写入去掉.old的文件中，并用file_handles记录打开的文件句柄，map_handles记录对应的内存
+        映射文件句柄
+        :return:
+        """
         for (old, new) in zip(self.old_files, self.map_files):
             with open(old) as old_fp:
                 fp = open(new, 'w+')
@@ -107,7 +131,8 @@ class Node(object):
                 if len(content) > 0:
                     m = mmap.mmap(fp.fileno(), self.NODE_FILE_SIZE)
                     self.map_handles[new] = m
-                    
+
+        # 如果不存在为处理完的bundle，创建一个文件(1)
         if len(self.map_files) == 0:
             path = os.path.join(self.dir_, '1')
             self.map_files.append(path)
@@ -124,24 +149,31 @@ class Node(object):
         fp.flush()
         
     def _get_obj(self, obj, force=False):
+        """
+        返回obj中未处理过的obj。如果verify_exists_hook不为空，利用其检查，即bloomfilter
+        force表示是否需要通过verify_exists_hook检查
+        :param obj:
+        :param force:
+        :return:
+        """
         if isinstance(obj, (tuple, list)):
             if self.verify_exists_hook is None or force is True:
                 src_obj = obj
-                obj = '\n'.join(obj) + '\n'
+                obj = '\n'.join([str(m) for m in obj]) + '\n'
             else:
                 src_obj = list()
-                for itm in obj:
-                    if not self.verify_exists_hook.verify(itm):
-                        src_obj.append(itm)
-                obj = '\n'.join(src_obj) + '\n'
+                for message in obj:
+                    if not self.verify_exists_hook.verify(message.get_key()):
+                        src_obj.append(message)
+                obj = '\n'.join([str(m) for m in src_obj]) + '\n'
         else:
             if self.verify_exists_hook is None or force is True:
                 src_obj = obj
-                obj = obj + '\n'
+                obj = str(obj) + '\n'
             else:
-                if not self.verify_exists_hook.verify(obj):
+                if not self.verify_exists_hook.verify(obj.get_key()):
                     src_obj = obj
-                    obj = obj + '\n'
+                    obj = str(obj) + '\n'
                 else:
                     return '', ''
         
@@ -149,7 +181,8 @@ class Node(object):
                     
     def put(self, obj, force=False):
         if self.stopped: return ''
-        
+
+        # 去重
         src_obj, obj = self._get_obj(obj, force=force)
                 
         if len(obj.replace('\n', '')) == 0:
@@ -202,7 +235,7 @@ class Node(object):
                     m[:] = m[pos+1:] + '\x00' * (pos+1)
                     m.flush()
                     if len(obj.strip()) != 0:
-                        return obj.strip()
+                        return Message.from_str(obj.strip())
                     pos = m.find('\n')
         
     def _remove_handles(self, path):

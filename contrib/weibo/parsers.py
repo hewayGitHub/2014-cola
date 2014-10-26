@@ -38,7 +38,7 @@ from bundle import WeiboUserBundle
 from storage import DoesNotExist, Q, WeiboUser, Friend,\
                     MicroBlog, Geo, UserInfo, WorkInfo, EduInfo,\
                     Comment, Forward, Like, ValidationError
-from conf import fetch_forward, fetch_comment, fetch_like
+from conf import fetch_forward, fetch_comment, fetch_like, max_level
 
 try:
     from dateutil.parser import parse
@@ -46,6 +46,7 @@ except ImportError:
     raise DependencyNotInstalledError('python-dateutil')
 
 TIMEOUT = 30.0
+MAX_LEVEL = max_level
 
 class WeiboParser(Parser):
     def __init__(self, opener=None, url=None, bundle=None, **kwargs):
@@ -410,6 +411,8 @@ class UserInfoParser(WeiboParser):
                                                     .find('strong', attrs={'node-type': 'follow'}).text)
                     weibo_user.info.n_fans = int(header_soup.find('ul', attrs={'class': 'user_atten'})\
                                                  .find('strong', attrs={'node-type': 'fans'}).text)
+                    weibo_user.info.n_weibos = int(header_soup.find('ul', attrs={'class': 'user_atten'})\
+                                                 .find('strong', attrs={'node-type': 'weibo'}).text)
                                                     
             elif 'STK' in text:
                 text = text.replace('STK && STK.pageletM && STK.pageletM.view(', '')[:-1]
@@ -438,7 +441,8 @@ class UserInfoParser(WeiboParser):
             u'简介': {'field': 'intro'},
             u'邮箱': {'field': 'email'},
             u'QQ': {'field': 'qq'},
-            u'MSN': {'field': 'msn'}
+            u'MSN': {'field': 'msn'},
+            u'注册时间': {'field': 'created_at'}
         }
         if profile_div is not None:
             for div in profile_div.find_all(attrs={'class': 'pf_item'}):
@@ -503,7 +507,7 @@ class UserInfoParser(WeiboParser):
     
 class UserFriendParser(WeiboParser):
     def parse(self, url=None):
-        if self.bundle.exists == False:
+        if self.bundle.exists == False or self.bundle.level >= MAX_LEVEL:
             return [], []
         
         url = url or self.url
@@ -579,9 +583,16 @@ class UserFriendParser(WeiboParser):
             friend.uid = data['uid']
             friend.nickname = data['fnick']
             friend.sex = True if data['sex'] == u'm' else False
-            
-            bundles.append(WeiboUserBundle(str(friend.uid)))
+            links = li.find('div', attrs={'class': 'connect'}).find_all('a')
+
+            if len(links) == 3:
+                friend.n_follows = int(links[0].text)
+                friend.n_fans = int(links[1].text)
+                friend.n_weibos = int(links[2].text)
+
+            #bundles.append(WeiboUserBundle(str(friend.uid)))
             if is_follow:
+                bundles.append(WeiboUserBundle(str(friend.uid), level=MAX_LEVEL))
                 weibo_user.follows.append(friend)
             else:
                 weibo_user.fans.append(friend)

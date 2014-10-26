@@ -37,6 +37,7 @@ from cola.core.logs import get_logger
 from cola.core.utils import import_job
 from cola.core.errors import LoginFailure
 from cola.job.loader import JobLoader, LimitionJobLoader
+from cola.core.mq.message import Message
 
 MAX_THREADS_SIZE = 10
 TIME_SLEEP = 10
@@ -231,8 +232,8 @@ class BasicWorkerJobLoader(JobLoader):
                     next_urls.extend(urls)
                     urls = next_urls
                     if bundles:
-                        self.mq.put([str(b) for b in bundles if b.force is False])
-                        self.mq.put([str(b) for b in bundles if b.force is True], force=True)
+                        self.mq.put([b.get_message() for b in bundles if b.force is False])
+                        self.mq.put([b.get_message() for b in bundles if b.force is True], force=True)
                     if hasattr(opener, 'close'):
                         opener.close()
                         
@@ -265,8 +266,8 @@ class BasicWorkerJobLoader(JobLoader):
                         puts.append(url)
                     else:
                         forces.append(url)
-                self.mq.put(puts)
-                self.mq.put(forces, force=True)
+                self.mq.put([Message(url) for url in puts])
+                self.mq.put([Message(url) for url in forces], force=True)
                 if hasattr(opener, 'close'):
                     opener.close()
                 
@@ -396,7 +397,7 @@ class StandaloneWorkerJobLoader(LimitionJobLoader, BasicWorkerJobLoader):
             
     def run(self, put_starts=True):
         if put_starts:
-            self.mq.put(self.job.starts)
+            self.mq.put([Message(start) for start in self.job.starts])
         self._run(stop_when_finish=True)
         
 class WorkerJobLoader(BasicWorkerJobLoader):
