@@ -94,6 +94,7 @@ class WeiboParser(Parser):
 
 class MicroBlogParser(WeiboParser):
     def parse(self, url=None):
+        return [], []
         if self.bundle.exists == False:
             return [], []
         
@@ -393,11 +394,11 @@ class UserInfoParser(WeiboParser):
                 text = text.strip().replace(';', '').replace('FM.view(', '')[:-1]
                 data = json.loads(text)
                 domid = data['domid']
-                if domid.startswith('Pl_Official_LeftInfo__'):
+                if domid.startswith('Pl_Official_PersonalInfo__'):
                     info_soup = beautiful_soup(data['html'])
-                    info_div = info_soup.find('div', attrs={'class': 'profile_pinfo'})
-                    for block_div in info_div.find_all('div', attrs={'class': 'infoblock'}):
-                        block_title = block_div.find('form').text.strip()
+                    # info_div = info_soup.find('div', attrs={'class': 'profile_pinfo'})
+                    for block_div in info_soup.find_all('div', attrs={'class': 'WB_cardwrap'}):
+                        block_title = block_div.find('div', attrs={'class':'WB_cardtitle_b'}).text.strip()
                         if block_title == u'基本信息':
                             profile_div = block_div
                         elif block_title == u'工作信息':
@@ -406,16 +407,13 @@ class UserInfoParser(WeiboParser):
                             edu_div = block_div
                         elif block_title == u'标签信息':
                             tags_div = block_div
-                elif domid == 'Pl_Official_Header__1':
+                elif domid.startswith('Pl_Core_T8CustomTriColumn__'):
                     header_soup = beautiful_soup(data['html'])
-                    weibo_user.info.avatar = header_soup.find('div', attrs={'class': 'pf_head_pic'})\
-                                                .find('img')['src']
-                    weibo_user.info.n_follows = int(header_soup.find('ul', attrs={'class': 'user_atten'})\
-                                                    .find('strong', attrs={'node-type': 'follow'}).text)
-                    weibo_user.info.n_fans = int(header_soup.find('ul', attrs={'class': 'user_atten'})\
-                                                 .find('strong', attrs={'node-type': 'fans'}).text)
-                    weibo_user.info.n_weibos = int(header_soup.find('ul', attrs={'class': 'user_atten'})\
-                                                 .find('strong', attrs={'node-type': 'weibo'}).text)
+                    links =  header_soup.find_all('a')
+                    if len(links) == 3:
+                        weibo_user.info.n_follows = int(links[0].find('strong').text)
+                        weibo_user.info.n_fans = int(links[1].find('strong').text)
+                        weibo_user.info.n_weibos = int(links[2].find('strong').text)
                                                     
             elif 'STK' in text:
                 text = text.replace('STK && STK.pageletM && STK.pageletM.view(', '')[:-1]
@@ -431,8 +429,7 @@ class UserInfoParser(WeiboParser):
                     tags_div = beautiful_soup(data['html'])
                 elif pid == 'pl_profile_photo':
                     soup = beautiful_soup(data['html'])
-                    weibo_user.info.avatar = soup.find('img')['src']
-        
+
         profile_map = {
             u'昵称': {'field': 'nickname'},
             u'所在地': {'field': 'location'},
@@ -448,9 +445,9 @@ class UserInfoParser(WeiboParser):
             u'注册时间': {'field': 'created_at'}
         }
         if profile_div is not None:
-            for div in profile_div.find_all(attrs={'class': 'pf_item'}):
-                k = div.find(attrs={'class': 'label'}).text.strip()
-                v = div.find(attrs={'class': 'con'}).text.strip()
+            for div in profile_div.find_all('li'):
+                k = div.find(attrs={'class': 'pt_title'}).text.strip(u'：')
+                v = div.find(attrs={'class': 'pt_detail'}).text.strip()
                 if k in profile_map:
                     if k == u'个性域名' and '|' in v:
                         v = v.split('|')[1].strip()
@@ -462,47 +459,57 @@ class UserInfoParser(WeiboParser):
                 
         weibo_user.info.work = []
         if career_div is not None:
-            for div in career_div.find_all(attrs={'class': 'con'}):
+            for div in career_div.find_all(attrs={'class': 'pt_detail'}):
+                contents = [unicode(ss) for ss in div.stripped_strings]
+
                 work_info = WorkInfo()
-                ps = div.find_all('p')
-                for p in ps:
-                    a = p.find('a')
-                    if a is not None:
-                        work_info.name = a.text
-                        text = p.text
-                        if '(' in text:
-                            work_info.date = text.strip().split('(')[1].strip(')')
+                work_info.name = div.find('a').text.strip()
+                for index in range(1, len(contents)):
+                    if '(' in contents[index]:
+                        work_info.date = contents[index].split(u'(')[1].strip(u')')
+                    elif contents[index].startswith(u'地区：'):
+                        work_info.location = contents[index].split(u'：', 1)[1]
+                    elif contents[index].startswith(u'职位：'):
+                        work_info.position = contents[index].split(u'：', 1)[1]
                     else:
-                        text = p.text
-                        if text.startswith(u'地区：'):
-                            work_info.location = text.split(u'：', 1)[1]
-                        elif text.startswith(u'职位：'):
-                            work_info.position = text.split(u'：', 1)[1]
-                        else:
-                            work_info.detail = text
+                        work_info.detail = contents[index]
                 weibo_user.info.work.append(work_info)
             
         weibo_user.info.edu = []
         if edu_div is not None:
-            for div in edu_div.find_all(attrs={'class': 'con'}):
-                edu_info = EduInfo()
-                ps = div.find_all('p')
-                for p in ps:
-                    a = p.find('a')
-                    text = p.text
-                    if a is not None:
-                        edu_info.name = a.text
-                        if '(' in text:
-                            edu_info.date = text.strip().split('(')[1].strip(')')
-                    else:
-                        edu_info.detail = text
-                weibo_user.info.edu.append(edu_info)
+            for div in edu_div.find_all('li'):
+                contents = [unicode(ss) for ss in div.find(attrs={'class': 'pt_detail'}).stripped_strings]
+                names = [link.text.strip() for link in div.find_all('a')]
+                if len(names) == 1:
+                    edu_info = EduInfo()
+                    edu_info.name = names[0]
+                    for index in range(1, len(contents)):
+                        if '(' in contents[index]:
+                            edu_info.date = contents[index].split(u'(')[1].strip(u'年)')
+                        else:
+                            edu_info.detail = contents[index]
+
+                    weibo_user.info.edu.append(edu_info)
+                elif len(names) > 1:
+                    for name in names:
+                        edu_info = EduInfo()
+                        edu_info.name = name
+
+                        start_index = contents.index(name)
+                        for index in range(start_index+1, len(contents)):
+                            if contents[index] in names:
+                                break
+
+                            if '(' in contents[index]:
+                                edu_info.date = contents[index].split(u'(')[1].strip(u'年)')
+                            else:
+                                edu_info.detail = contents[index]
+                        weibo_user.info.edu.append(edu_info)
                     
         weibo_user.info.tags = []
         if tags_div is not None:
-            for div in tags_div.find_all(attrs={'class': 'con'}):
-                for a in div.find_all('a'):
-                    weibo_user.info.tags.append(a.text)
+            for a in tags_div.find_all('a', attrs={'node-type': 'tag'}):
+                weibo_user.info.tags.append(a.text.strip())
                 
         weibo_user.save()
         self.logger.debug('parse %s finish' % url)
@@ -510,6 +517,7 @@ class UserInfoParser(WeiboParser):
     
 class UserFriendParser(WeiboParser):
     def parse(self, url=None):
+        return [], []
         if self.bundle.exists == False or self.bundle.level >= MAX_LEVEL:
             return [], []
         
@@ -542,7 +550,7 @@ class UserFriendParser(WeiboParser):
                 except ValueError, e:
                     return self._error(url, e)
                 domid = data['domid']
-                if domid.startswith('Pl_Official_LeftHisRelation__'):
+                if domid.startswith('Pl_Official_HisRelation__'):
                     html = beautiful_soup(data['html'])
                 if 'relate' in decodes and decodes['relate'] == 'fans':
                     is_follow = False
@@ -559,7 +567,7 @@ class UserFriendParser(WeiboParser):
         bundles = []
         ul = None
         try:
-            ul = html.find(attrs={'class': 'cnfList', 'node-type': 'userListBox'})
+            ul = html.find(attrs={'class': 'follow_list', 'node-type': 'userListBox'})
         except AttributeError, e:
             if br.geturl().startswith('http://e.weibo.com'):
                 return [], []
@@ -579,14 +587,14 @@ class UserFriendParser(WeiboParser):
                 weibo_user.follows = []
             else:
                 weibo_user.fans = []
-        for li in ul.find_all(attrs={'class': 'S_line1', 'action-type': 'itemClick'}):
+        for li in ul.find_all(attrs={'class': 'S_line2', 'action-type': 'itemClick'}):
             data = dict([l.split('=') for l in li['action-data'].split('&')])
             
             friend = Friend()
             friend.uid = data['uid']
             friend.nickname = data['fnick']
             friend.sex = True if data['sex'] == u'm' else False
-            links = li.find('div', attrs={'class': 'connect'}).find_all('a')
+            links = li.find('div', attrs={'class': 'info_connect'}).find_all('a')
 
             if len(links) == 3:
                 friend.n_follows = int(links[0].text)
@@ -604,12 +612,12 @@ class UserFriendParser(WeiboParser):
         self.logger.debug('parse %s finish' % url)
         
         urls = []
-        pages = html.find('div', attrs={'class': 'W_pages', 'node-type': 'pageList'})
-        if pages is not None:
+        pages = html.find('div', attrs={'class': 'WB_cardpage', 'node-type': 'pageList'})
+        if pages is not None:  # 检测当前页面是否下一页的按钮，如果有表示有下一页，那么就当前页数+1，添加到待处理的url
             a = pages.find_all('a')
             if len(a) > 0:
                 next_ = a[-1]
-                if next_['class'] == ['W_btn_c']:
+                if next_['class'] == ['next']:
                     decodes['page'] = int(decodes.get('page', 1)) + 1
                     query_str = urllib.urlencode(decodes)
                     url = '%s?%s' % (url.split('?')[0], query_str)

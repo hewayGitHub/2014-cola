@@ -98,7 +98,6 @@ class WorkInfo(EmbeddedDocument):
     
 class UserInfo(EmbeddedDocument):
     nickname = StringField()
-    avatar = URLField()
     location = StringField()
     sex = BooleanField()
     birth = StringField()
