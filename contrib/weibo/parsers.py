@@ -94,7 +94,6 @@ class WeiboParser(Parser):
 
 class MicroBlogParser(WeiboParser):
     def parse(self, url=None):
-        return [], []
         if self.bundle.exists == False:
             return [], []
         
@@ -517,7 +516,6 @@ class UserInfoParser(WeiboParser):
     
 class UserFriendParser(WeiboParser):
     def parse(self, url=None):
-        return [], []
         if self.bundle.exists == False or self.bundle.level >= MAX_LEVEL:
             return [], []
         

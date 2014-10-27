@@ -255,8 +255,6 @@ class BasicWorkerJobLoader(JobLoader):
         try:
             parser_cls, options = self.job.url_patterns.get_parser(obj, options=True)
             if parser_cls is not None:
-
-
                 self.pages_size += 1
                 next_urls = parser_cls(opener, obj, logger=self.logger, **options).parse()
                 next_urls = list(self.job.url_patterns.matches(next_urls))
