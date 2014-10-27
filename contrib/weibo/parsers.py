@@ -125,7 +125,10 @@ class MicroBlogParser(WeiboParser):
         params['count'] = count
         params['page'] = page
         params['pre_page'] = pre_page
-        
+
+        if page >= 20:
+            return [], []
+
         data = json.loads(br.response().read())['data']
         soup = beautiful_soup(data)
         finished = False

@@ -1,12 +1,12 @@
 job:
   db: sina
   mode: bundle # also can be `bundle`
-  size: 100   # the destination (including bundle) size
+  size: 1000   # the destination (including bundle) size
   max_level: 3  # the max level
   limit: 0  # 0 means no restrictions, if greater than 0, means webpages opened per minute.
   master_port: 12104
   port: 12105
-  instances: 1
+  instances: 2
   mongo:
     host: 10.77.30.62
     port: 27017

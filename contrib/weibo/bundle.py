@@ -60,4 +60,8 @@ class WeiboUserBundle(Bundle):
         ]
 
     def get_message(self):
-        return Message.from_str("{'''}")
+        messg_dict = dict()
+        messg_dict['key'] = self.uid
+        messg_dict['level'] = self.level
+
+        return Message(messg_dict)

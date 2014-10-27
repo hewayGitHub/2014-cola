@@ -49,7 +49,7 @@ url_patterns = UrlPatterns(
 
 def get_job():
     return Job('sina weibo crawler', url_patterns, MechanizeOpener, starts,
-               is_bundle=True, unit_cls=WeiboUserBundle, 
+               is_bundle=True, unit_cls=WeiboUserBundle,
                instances=instances, debug=True, user_conf=user_config,
                login_hook=login_hook)
     

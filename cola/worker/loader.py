@@ -221,7 +221,7 @@ class BasicWorkerJobLoader(JobLoader):
             while len(urls) > 0 and not self.stopped:
                 url = urls.pop(0)
                 self.info_logger.info('get %s url: %s' % (bundle.label, url))
-                
+
                 parser_cls, options = self.job.url_patterns.get_parser(url, options=True)
                 if parser_cls is not None:
                     self._require_budget()
@@ -236,7 +236,7 @@ class BasicWorkerJobLoader(JobLoader):
                         self.mq.put([b.get_message() for b in bundles if b.force is True], force=True)
                     if hasattr(opener, 'close'):
                         opener.close()
-                        
+
             self.error_times = 0
         except LoginFailure, e:
             if not self._login(opener):
