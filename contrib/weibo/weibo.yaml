@@ -1,12 +1,16 @@
 job:
   db: sina
   mode: bundle # also can be `bundle`
+<<<<<<< HEAD
   size: 10000   # the destination (including bundle) size
+=======
+  size: 1   # the destination (including bundle) size
+>>>>>>> origin/master
   max_level: 3  # the max level
   limit: 0  # 0 means no restrictions, if greater than 0, means webpages opened per minute.
   master_port: 12104
   port: 12105
-  instances: 2
+  instances: 1
   mongo:
     host: 10.77.30.62
     port: 27017
@@ -14,6 +18,7 @@ job:
     - username: heway.hust@gmail.com  # username heway.hust@gmail.com  rclongyin@126.com
       password: 1207weibo7217  # password ly123456 1207weibo7217
   starts:
+<<<<<<< HEAD
     - uid: 1200436465
     - uid: 1960034665
     - uid: 2728397325
@@ -95,6 +100,9 @@ job:
     - uid: 2289106530
     - uid: 2164802321
     - uid: 1709101717
+=======
+    - uid: 1914450674
+>>>>>>> origin/master
   fetch:
     forward: no
     comment: no

@@ -399,6 +399,10 @@ class UserInfoParser(WeiboParser):
                 domid = data['domid']
                 if domid.startswith('Pl_Official_PersonalInfo__'):
                     info_soup = beautiful_soup(data['html'])
+<<<<<<< HEAD
+=======
+                    # info_div = info_soup.find('div', attrs={'class': 'profile_pinfo'})
+>>>>>>> origin/master
                     for block_div in info_soup.find_all('div', attrs={'class': 'WB_cardwrap'}):
                         block_title = block_div.find('div', attrs={'class':'WB_cardtitle_b'}).text.strip()
                         if block_title == u'基本信息':
@@ -413,11 +417,16 @@ class UserInfoParser(WeiboParser):
                             tags_div = block_div
                 elif domid.startswith('Pl_Core_T8CustomTriColumn__'):
                     header_soup = beautiful_soup(data['html'])
+<<<<<<< HEAD
                     links = header_soup.find_all('a')
+=======
+                    links =  header_soup.find_all('a')
+>>>>>>> origin/master
                     if len(links) == 3:
                         weibo_user.info.n_follows = int(links[0].find('strong').text)
                         weibo_user.info.n_fans = int(links[1].find('strong').text)
                         weibo_user.info.n_weibos = int(links[2].find('strong').text)
+<<<<<<< HEAD
                 elif domid.startswith('Pl_Official_RightGrowNew__'):
                     right_soup = beautiful_soup(data['html'])
                     level_div = right_soup.find('div', attrs={'class': 'level_box'})
@@ -431,6 +440,9 @@ class UserInfoParser(WeiboParser):
                                 weibo_user.info.level = int(v.replace(u'LV', ''))
                             elif k == u'活跃天数':
                                 weibo_user.info.active_days = int(v)
+=======
+                                                    
+>>>>>>> origin/master
             elif 'STK' in text:
                 text = text.replace('STK && STK.pageletM && STK.pageletM.view(', '')[:-1]
                 data = json.loads(text)
@@ -461,6 +473,7 @@ class UserInfoParser(WeiboParser):
             u'注册时间': {'field': 'created_at'}
         }
         if profile_div is not None:
+<<<<<<< HEAD
             for profile_li in profile_div.find_all('li'):
                 k, v = profile_li.text.split(u'：')
                 k = k.strip()
@@ -479,6 +492,11 @@ class UserInfoParser(WeiboParser):
                 k, v = div.text.split(u'：')
                 k = k.strip()
                 v = v.strip()
+=======
+            for div in profile_div.find_all('li'):
+                k = div.find(attrs={'class': 'pt_title'}).text.strip(u'：')
+                v = div.find(attrs={'class': 'pt_detail'}).text.strip()
+>>>>>>> origin/master
                 if k in profile_map:
                     if k == u'个性域名' and '|' in v:
                         v = v.split('|')[1].strip()
@@ -648,12 +666,20 @@ class UserFriendParser(WeiboParser):
 
 
         urls = []
+<<<<<<< HEAD
         pages = html.find('div', attrs={'node-type': 'pageList'})
+=======
+        pages = html.find('div', attrs={'class': 'WB_cardpage', 'node-type': 'pageList'})
+>>>>>>> origin/master
         if pages is not None:  # 检测当前页面是否下一页的按钮，如果有表示有下一页，那么就当前页数+1，添加到待处理的url
             a = pages.find_all('a')
             if len(a) > 0:
                 next_ = a[-1]
+<<<<<<< HEAD
                 if u'next' in next_['class'] and u'href' in next_.attrs:
+=======
+                if next_['class'] == ['next']:
+>>>>>>> origin/master
                     decodes['page'] = int(decodes.get('page', 1)) + 1
                     query_str = urllib.urlencode(decodes)
                     url = '%s?%s' % (url.split('?')[0], query_str)
