@@ -1,6 +1,9 @@
 cola
 ====
 
+##Change log:
+Sometime, we need to crawl a small network of users, so i rewrite the code to support for crawl by setting the level of network you want to crawl
+
 Cola is a distributed crawling framework. 
 
 Why named cola? hmm, I like cola, and cola sounds a bit like crawler.
@@ -17,3 +20,4 @@ Why named cola? hmm, I like cola, and cola sounds a bit like crawler.
 * [Chinese docs(wiki)](https://github.com/chineking/cola/wiki).
 * I am trying my best to make cola stable.
 * Cola can also run in a single machine, you don't need to start master, workers and so on. Everything is simple!
+* 
