@@ -1,7 +1,7 @@
 job:
   db: sina
   mode: bundle # also can be `bundle`
-  size: 1000   # the destination (including bundle) size
+  size: 10000   # the destination (including bundle) size
   max_level: 3  # the max level
   limit: 0  # 0 means no restrictions, if greater than 0, means webpages opened per minute.
   master_port: 12104
@@ -11,10 +11,90 @@ job:
     host: 10.77.30.62
     port: 27017
   login:
-    - username: 895045426@qq.com  # username
-      password: 1207weibo7217  # password
+    - username: heway.hust@gmail.com  # username heway.hust@gmail.com  rclongyin@126.com
+      password: 1207weibo7217  # password ly123456 1207weibo7217
   starts:
-    - uid: 2340785764
+    - uid: 1200436465
+    - uid: 1960034665
+    - uid: 2728397325
+    - uid: 2653950331
+    - uid: 1190785153
+    - uid: 2267564584
+    - uid: 1506621535
+    - uid: 1951275267
+    - uid: 1981972327
+    - uid: 1909777121
+    - uid: 1862455331
+    - uid: 2241478722
+    - uid: 1768268902
+    - uid: 2617142625
+    - uid: 1646915005
+    - uid: 2129265364
+    - uid: 1653606860
+    - uid: 1998399813
+    - uid: 2471815372
+    - uid: 1745251405
+    - uid: 1176204670
+    - uid: 1841957797
+    - uid: 1551325874
+    - uid: 1894397385
+    - uid: 2186321064
+    - uid: 1790933087
+    - uid: 2652946291
+    - uid: 2288659684
+    - uid: 2959729001
+    - uid: 2172622572
+    - uid: 2636517484
+    - uid: 2832823497
+    - uid: 2859439370
+    - uid: 2695140123
+    - uid: 1190455911
+    - uid: 1731346535
+    - uid: 1937045405
+    - uid: 1256536444
+    - uid: 1640661657
+    - uid: 1911962285
+    - uid: 1761781161
+    - uid: 1710392470
+    - uid: 1634624087
+    - uid: 1797102710
+    - uid: 1616179332
+    - uid: 1582166932
+    - uid: 2008975841
+    - uid: 2057635545
+    - uid: 1798414807
+    - uid: 2350533895
+    - uid: 2528512402
+    - uid: 2049164937
+    - uid: 1709282722
+    - uid: 2990187721
+    - uid: 2036267843
+    - uid: 2354833240
+    - uid: 1757075547
+    - uid: 2025541087
+    - uid: 1760035201
+    - uid: 2219988300
+    - uid: 1825949297
+    - uid: 2079217451
+    - uid: 2111167655
+    - uid: 1625344590
+    - uid: 1867668341
+    - uid: 2061401035
+    - uid: 1736126994
+    - uid: 1710256283
+    - uid: 1704304425
+    - uid: 1868052141
+    - uid: 2271368290
+    - uid: 2631317573
+    - uid: 1801542775
+    - uid: 1877202907
+    - uid: 2415164273
+    - uid: 1884628074
+    - uid: 1764973724
+    - uid: 1572805762
+    - uid: 2289106530
+    - uid: 2164802321
+    - uid: 1709101717
   fetch:
     forward: no
     comment: no

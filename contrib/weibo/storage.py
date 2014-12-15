@@ -114,6 +114,8 @@ class UserInfo(EmbeddedDocument):
     n_follows = IntField()
     n_fans = IntField()
     n_weibos = IntField()
+    level = IntField()
+    active_days = IntField()
 
     edu = ListField(EmbeddedDocumentField(EduInfo))
     work = ListField(EmbeddedDocumentField(WorkInfo))

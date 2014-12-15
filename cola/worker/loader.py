@@ -215,7 +215,7 @@ class BasicWorkerJobLoader(JobLoader):
     def _execute_bundle(self, obj, opener=None):
         bundle = self.job.unit_cls(obj)
         urls = bundle.urls()
-        
+
         url = None
         try:
             while len(urls) > 0 and not self.stopped:
@@ -236,7 +236,10 @@ class BasicWorkerJobLoader(JobLoader):
                         self.mq.put([b.get_message() for b in bundles if b.force is True], force=True)
                     if hasattr(opener, 'close'):
                         opener.close()
-
+                if random.randint(1,10) < 7:
+                    time.sleep(random.randint(5, 15))
+                else:
+                    time.sleep(random.randint(20, 60))
             self.error_times = 0
         except LoginFailure, e:
             if not self._login(opener):
